@@ -148,6 +148,21 @@ typedef struct gp2xCtrlData SceCtrlData;
 #define GP2X_DOWNLEFT       87 //SDLK_KP1
 #define GP2X_DOWNRIGHT      89 //SDLK_KP3
 
+#ifdef MIYOOMINI
+#define GP2X_B              32
+#define GP2X_X              306
+#define GP2X_Y              304
+#define GP2X_A              308
+#define GP2X_L              101
+#define GP2X_R              116
+#define GP2X_FIRE           9
+#define GP2X_START          13
+#define GP2X_SELECT         27
+#define GP2X_VOLUP         86     //SDLK_KP_PLUS
+#define GP2X_VOLDOWN       82    //SDLK_KP_MINUS
+
+#else
+
 #if 0
 #define GP2X_A              38 //SDLK_a
 #define GP2X_B              56 //SDLK_b
@@ -166,6 +181,8 @@ typedef struct gp2xCtrlData SceCtrlData;
 #define GP2X_SELECT         SDLK_RSHIFT //39  //SDLK_s
 #define GP2X_VOLUP         86     //SDLK_KP_PLUS
 #define GP2X_VOLDOWN       82    //SDLK_KP_MINUS
+
+#endif
 
 #endif
 

@@ -35,7 +35,9 @@ int            psp_font_height = 8;
 
 SDL_Surface *back_surface;
 SDL_Surface *back2_surface;
-// SDL_Surface *ScreenSurface;
+#ifdef MIYOOMINI
+SDL_Surface *ScreenSurface;
+#endif
 
 SDL_Surface *background_surface = NULL;
 SDL_Surface *blit_surface;
@@ -443,10 +445,14 @@ psp_sdl_flip(void)
   // SDL_Flip(ScreenSurface);
   // // if(SDL_MUSTLOCK(ScreenSurface)) SDL_UnlockSurface(ScreenSurface);
 
+#ifdef MIYOOMINI
+  SDL_BlitSurface(back_surface, NULL, ScreenSurface, NULL); 
+  SDL_Flip(ScreenSurface);
+#else
   if(SDL_MUSTLOCK(back_surface)) SDL_LockSurface(back_surface);
   SDL_Flip(back_surface);
   if(SDL_MUSTLOCK(back_surface)) SDL_UnlockSurface(back_surface);
-
+#endif
 }
 
 #define  systemRedShift      (back_surface->format->Rshift)
@@ -679,6 +685,10 @@ psp_sdl_init(void)
   psp_sdl_select_font_6x10();
   // ScreenSurface=SDL_SetVideoMode(320, 480, 16, SDL_HWSURFACE);
   // back_surface = SDL_CreateRGBSurface(SDL_SWSURFACE, PSP_SDL_SCREEN_WIDTH, PSP_SDL_SCREEN_HEIGHT, 16, 0, 0, 0, 0);
+#ifdef MIYOOMINI
+  ScreenSurface = SDL_SetVideoMode(PSP_SDL_SCREEN_WIDTH, PSP_SDL_SCREEN_HEIGHT, 16, SDL_SWSURFACE);
+  back_surface = SDL_CreateRGBSurface(SDL_SWSURFACE, PSP_SDL_SCREEN_WIDTH, PSP_SDL_SCREEN_HEIGHT, 16, 0, 0, 0, 0);
+#else
   back_surface = SDL_SetVideoMode(PSP_SDL_SCREEN_WIDTH, PSP_SDL_SCREEN_HEIGHT, 16, SDL_HWSURFACE |
 #ifdef SDL_TRIPLEBUF
     SDL_TRIPLEBUF
@@ -686,7 +696,7 @@ psp_sdl_init(void)
     SDL_DOUBLEBUF
 #endif
   );
-
+#endif
   if ( !back_surface) {
     return 0;
   }

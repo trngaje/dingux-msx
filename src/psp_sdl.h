@@ -22,10 +22,18 @@
 # define PSP_SDL_NOP   0
 # define PSP_SDL_XOR   1
 
-# define PSP_LINE_SIZE  320
+#if 0 //def MIYOOMINI
+#define PSP_LINE_SIZE  640
 
-# define PSP_SDL_SCREEN_WIDTH    320
-# define PSP_SDL_SCREEN_HEIGHT   240
+#define PSP_SDL_SCREEN_WIDTH    640
+#define PSP_SDL_SCREEN_HEIGHT   480
+
+#else
+#define PSP_LINE_SIZE  320
+
+#define PSP_SDL_SCREEN_WIDTH    320
+#define PSP_SDL_SCREEN_HEIGHT   240
+#endif
 
   typedef unsigned char   uchar;
   typedef unsigned int    uint;
