@@ -69,7 +69,11 @@ psp_initialize_help(void)
   /* Already done ? */
   if (psp_help_size > 0) return; 
 
+#ifdef KORFONT
+  strcpy(FileName, "./miyoomini-kor-msx.man.txt");
+#else
   strcpy(FileName, "./dingux-msx.man.txt");
+#endif
   FileDesc = fopen(FileName, "r");
 
   psp_help_current = 0;
@@ -115,7 +119,11 @@ psp_display_screen_help(void)
 
   x      = 0;
   y      = 0;
+#ifdef KORFONT
+  y_step = 10+2;
+#else
   y_step = 10;
+#endif
 
   help_line = psp_help_current;
   index     = 0;

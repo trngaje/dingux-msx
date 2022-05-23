@@ -353,7 +353,11 @@ static  int sel=0;
   int  last_time;
   int  tmp;
   long color;
+#ifdef MIYOOMINI
+  int top, rows=19, x, y, i, up=0;
+#else
   int top, rows=20, x, y, i, up=0;
+#endif
   char path[GP2X_FMGR_MAX_PATH];
   char oldDir[GP2X_FMGR_MAX_NAME];
   char buffer[GP2X_FMGR_MAX_NAME];
@@ -427,7 +431,11 @@ static  int sel=0;
       strncpy(buffer, sortfiles[top+i]->d_name, 28);
       string_fill_with_space(buffer, 28);
       psp_sdl_back2_print(x, y, buffer, color);
+#ifdef KORFONT
+      y += 12;
+#else	  
       y += 10;
+#endif
     }
 
     if (danzeff_mode) {
@@ -611,14 +619,21 @@ psp_fmgr_menu(int format, int drive_id)
     strcpy(user_filedir_joy, user_filedir_kbd);
     strcpy(user_filedir_set, user_filedir_kbd);
     strcpy(user_filedir_cht, user_filedir_kbd);
+#ifdef MIYOOMINI
+    strcpy(user_filedir_rom, "/mnt/SDCARD/Roms/msx/");
+    strcpy(user_filedir_disk, "/mnt/SDCARD/Roms/msx/");
+#else
     strcpy(user_filedir_rom, user_filedir_kbd);
     strcpy(user_filedir_disk, user_filedir_kbd);
+#endif
     strcat(user_filedir_kbd, "/kbd/");
     strcat(user_filedir_set, "/set/");
     strcat(user_filedir_cht, "/cht/");
     strcat(user_filedir_joy, "/joy/");
+#ifndef MIYOOMINI
     strcat(user_filedir_rom, "/roms/");
     strcat(user_filedir_disk, "/disk/");
+#endif
   }
 
   if (format == FMGR_FORMAT_KBD) user_filedir = user_filedir_kbd;

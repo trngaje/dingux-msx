@@ -77,6 +77,27 @@ enum {
 
   static menu_item_t menu_list[] =
   {
+#ifdef KORFONT
+    { "옛 값 검색:"},
+    { "신 값 검색:"},
+    { "값 넣기   :"},
+    { "치트 추가 :"},
+    { "램 저장"    },
+
+    { "활성화    : "},
+    { "모두      : "},
+    { "값        : "},
+    { "임포트    : "},
+    { "편집      : "},
+
+    { "삭제      : "},
+
+    { "치트 불러오기" },
+    { "치트 저장" },
+    { "치트 초기화" },
+
+    // { "Back to Menu"         }
+#else 
     { "Scan Old   :"},
     { "Scan New   :"},
     { "Poke Value :"},
@@ -96,6 +117,7 @@ enum {
     { "Reset cheat" },
 
     // { "Back to Menu"         }
+#endif
   };
 
 # define MAX_SCAN_ADDR    10
@@ -121,7 +143,11 @@ psp_display_screen_cheat_menu(void)
   int addr_id = 0;
   int x       = 10;
   int y       = 20;
+#ifdef KORFONT
+  int y_step  = 11;
+#else
   int y_step  = 10;
+#endif
   int sav_y   = 0;
   int first   = 0;
   char* scan  = 0;

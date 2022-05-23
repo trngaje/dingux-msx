@@ -85,7 +85,7 @@ enum {
    { "Down     :" },
    { "Left     :" },
    { "Right    :" },
-# if defined(DINGUX_MODE)
+# if defined(DINGUX_MODE) || defined(MIYOOMINI)
    { "B        :" },
    { "Y        :" },
    { "X        :" },
@@ -104,11 +104,19 @@ enum {
    { "JoyLeft  :" },
    { "JoyRight :" },
 
+#ifdef KORFONT
+   { "키보드 설정 값 불러오기" },
+   { "키보드 설정 값 저장" },
+   { "핫키 설정" },
+   { "키보드 설정 값 초기화" },
+   // { "Back to Menu" }
+#else
    { "Load Keyboard" },
    { "Save Keyboard" },
    { "Set Hotkeys" },
    { "Reset Keyboard" },
    // { "Back to Menu" }
+#endif
   };
 
   static int cur_menu_id = 0;
@@ -155,7 +163,7 @@ psp_display_screen_kbd_menu(void)
   int msx_key = 0;
   int color   = 0;
   int x       = 10;
-  int y       = 50;
+  int y       = 20;
   int y_step  = 10;
 
   psp_sdl_blit_help();
@@ -222,7 +230,7 @@ psp_display_screen_kbd_menu(void)
     }
   }
 
-  // psp_menu_display_save_name();
+  psp_menu_display_save_name();
 }
 
 static void

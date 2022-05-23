@@ -26,6 +26,10 @@
 #include "psp_sdl.h"
 #include "psp_danzeff.h"
 
+#ifdef KORFONT
+#include "bitmapfont_11x11.h"
+#endif
+
 extern unsigned char psp_font_8x8[];
 extern unsigned char psp_font_6x10[];
 
@@ -53,6 +57,23 @@ SDL_Surface *save_surface;
 #if defined(TRIPLEBUF)
 #define SDL_VIDEO_FLAGS SDL_DEFAULT_VIDEO_FLAGS | SDL_TRIPLEBUF
 #endif
+#endif
+
+#ifdef KORFONT
+unsigned short utf8_to_unicode(unsigned char c1, unsigned char c2, unsigned char c3)
+{
+	unsigned short c=0;
+	
+	if ((c1 & 0xf0) == 0xe0)
+		if ((c2 & 0xc0) == 0x80)
+			if ((c3 & 0xc0) == 0x80)
+			{
+				c = ((c1 & 0xf) << 12) | ((c2 & 0x3f) << 6) | (c3 & 0x3f);
+				return c;
+			}
+			
+	return 0;
+}
 #endif
 
 uint
@@ -96,10 +117,20 @@ psp_sdl_print(int x,int y, char *str, int color)
 {
   int index;
   int x0 = x;
-
+			
+  unsigned short usCode;
   for (index = 0; str[index] != '\0'; index++) {
-    psp_sdl_put_char(x, y, color, 0, str[index], 1, 0);
-    x += psp_font_width;
+	usCode = utf8_to_unicode(str[index+0], str[index+1], str[index+2]);
+			
+	if (usCode >= 0xac00 && usCode <= 0xd7a3) { // unicode hangul code range 	  
+		psp_sdl_put_kor_char(x, y, color, 0, usCode, 1, 0);
+		x += psp_font_width * 2;
+		index+=2;
+	}
+	else {
+		psp_sdl_put_char(x, y, color, 0, str[index], 1, 0);
+		x += psp_font_width;
+	}
     if (x >= (PSP_SDL_SCREEN_WIDTH - psp_font_width)) {
       x = x0; y+= psp_font_height;
     }
@@ -123,15 +154,17 @@ psp_sdl_clear_screen(int color)
 void
 psp_sdl_black_screen()
 {
+#ifndef MIYOOMINI
   SDL_FillRect(back_surface,NULL,SDL_MapRGB(back_surface->format,0x0,0x0,0x0));
   SDL_Flip(back_surface);
   SDL_FillRect(back_surface,NULL,SDL_MapRGB(back_surface->format,0x0,0x0,0x0));
   SDL_Flip(back_surface);
-  
-  // SDL_FillRect(ScreenSurface,NULL,SDL_MapRGB(ScreenSurface->format,0x0,0x0,0x0));
-  // SDL_Flip(ScreenSurface);
-  // SDL_FillRect(ScreenSurface,NULL,SDL_MapRGB(ScreenSurface->format,0x0,0x0,0x0));
-  // SDL_Flip(ScreenSurface);
+#else  
+  SDL_FillRect(ScreenSurface,NULL,SDL_MapRGB(ScreenSurface->format,0x0,0x0,0x0));
+  SDL_Flip(ScreenSurface);
+  SDL_FillRect(ScreenSurface,NULL,SDL_MapRGB(ScreenSurface->format,0x0,0x0,0x0));
+  SDL_Flip(ScreenSurface);
+#endif
 }
 
 void
@@ -239,20 +272,22 @@ psp_sdl_put_char(int x, int y, int color, int bgcolor, uchar c, int drawfg, int 
   int b;
   int index;
 
-  u16 *vram = (u16 *)psp_sdl_get_vram_addr(x, y);
+  u16 *vram = (u16 *)psp_sdl_get_vram_addr(x*SCALE_X, y*SCALE_Y);
   index = ((u16)c) * psp_font_height;
 
-  for (cy=0; cy< psp_font_height; cy++) {
+  for (cy=0; cy< psp_font_height*SCALE_Y; cy++) {
     b = 1 << (psp_font_width - 1);
-    for (cx=0; cx< psp_font_width; cx++) {
+    for (cx=0; cx< psp_font_width*SCALE_X; cx++) {
       if (psp_font[index] & b) {
         if (drawfg) vram[cx + cy * PSP_LINE_SIZE] = color;
       } else {
         if (drawbg) vram[cx + cy * PSP_LINE_SIZE] = bgcolor;
       }
-      b = b >> 1;
+      if (cx%SCALE_X == SCALE_X-1)
+      	b = b >> 1;
     }
-    index++;
+    if (cy%SCALE_Y == SCALE_Y-1)
+    	index++;
   }
 }
 
@@ -269,23 +304,85 @@ psp_sdl_back2_put_char(int x, int y, int color, uchar c)
     return;
   }
 
-  u16 *vram  = (u16 *)psp_sdl_get_vram_addr(x, y);
+  u16 *vram  = (u16 *)psp_sdl_get_vram_addr(x*SCALE_X, y*SCALE_Y);
 
   index = ((u16)c) * psp_font_height;
 
-  for (cy=0; cy< psp_font_height; cy++) {
+  for (cy=0; cy< psp_font_height*SCALE_Y; cy++) {
     bmask = 1 << (psp_font_width - 1);
-    for (cx=0; cx< psp_font_width; cx++) {
+    for (cx=0; cx< psp_font_width*SCALE_X; cx++) {
       if (psp_font[index] & bmask) {
         vram[cx + cy * PSP_LINE_SIZE] = color;
       } else {
-        vram[cx + cy * PSP_LINE_SIZE] = psp_sdl_get_back2_color(x + cx, y + cy);
+        vram[cx + cy * PSP_LINE_SIZE] = psp_sdl_get_back2_color(x * SCALE_X + cx, y * SCALE_Y + cy);
       }
-      bmask = bmask >> 1;
+      if (cx % SCALE_X == (SCALE_X -1))
+      	bmask = bmask >> 1;
     }
-    index++;
+    if (cy%SCALE_Y == SCALE_Y-1)
+   	 index++;
   }
 }
+
+#ifdef KORFONT
+
+void
+psp_sdl_put_kor_char(int x, int y, int color, int bgcolor, unsigned short symbol, int drawfg, int drawbg)
+{
+	unsigned short *dst;
+
+	int l, u;
+	
+	for (l = 0; l < FONT_KOR_HEIGHT*SCALE_Y; l++)
+	{
+		dst=(unsigned short*)psp_sdl_get_vram_addr(x*SCALE_X, y*SCALE_Y+l);
+		for (u = 0; u < FONT_KOR_WIDTH*SCALE_X; u++)
+		{
+			unsigned char rem = 1 << (((u/SCALE_X) + (l/SCALE_Y) * FONT_KOR_WIDTH) & 7);
+			unsigned char offset  = ((u/SCALE_X) + (l/SCALE_Y) * FONT_KOR_WIDTH) >> 3;
+			if ((bitmap_kor_bin[FONT_KOR_OFFSET(symbol-0xac00) + offset] & rem) > 0)	{								
+				if (drawfg) *dst = color;
+			}
+			else {
+				if (drawbg) *dst = bgcolor;
+			}
+			dst++;
+
+		}
+	}	
+}
+
+void
+psp_sdl_back2_put_kor_char(int x, int y, int color, unsigned short symbol)
+{
+	if (!back2_surface) {
+		psp_sdl_put_kor_char(x, y, color, 0x0, symbol, 1, 1);
+		return;
+	}
+	
+	unsigned short *dst;
+
+	int l, u;
+	
+	for (l = 0; l < FONT_KOR_HEIGHT*SCALE_Y; l++)
+	{
+		dst=(unsigned short*)psp_sdl_get_vram_addr(x*SCALE_X, y*SCALE_Y+l);
+		for (u = 0; u < FONT_KOR_WIDTH*SCALE_X; u++)
+		{
+			unsigned char rem = 1 << (((u/SCALE_X) + (l/SCALE_Y) * FONT_KOR_WIDTH) & 7);
+			unsigned char offset  = ((u/SCALE_X) + (l/SCALE_Y) * FONT_KOR_WIDTH) >> 3;
+			if ((bitmap_kor_bin[FONT_KOR_OFFSET(symbol-0xac00) + offset] & rem) > 0)	{								
+				*dst = color;
+			}
+			else {
+				*dst = psp_sdl_get_back2_color(x*SCALE_X + u, y*SCALE_Y + l);
+			}
+			dst++;
+
+		}
+	}
+}
+#endif
 
 unsigned char
 psp_convert_utf8_to_iso_8859_1(unsigned char c1, unsigned char c2)
@@ -325,14 +422,26 @@ psp_sdl_back2_print(int x,int y,const char *str, int color)
   int index;
   int x0 = x;
 
+  unsigned short usCode;
   for (index = 0; str[index] != '\0'; index++) {
     uchar c = str[index];
+/*
     if ((c == 0xc2) || (c == 0xc3)) {
       uchar new_c = psp_convert_utf8_to_iso_8859_1(c, str[index+1]);
       if (new_c) { c = new_c; index++; }
     }
-    psp_sdl_back2_put_char(x, y, color, c);
-    x += psp_font_width;
+*/
+	usCode = utf8_to_unicode(str[index+0], str[index+1], str[index+2]);
+			
+	if (usCode >= 0xac00 && usCode <= 0xd7a3) { // unicode hangul code range 
+		psp_sdl_back2_put_kor_char(x, y, color, usCode);
+		x += psp_font_width*2;		
+		index+=2;
+	}
+	else {
+		psp_sdl_back2_put_char(x, y, color, c);
+		x += psp_font_width;
+	}
     if (x >= (PSP_SDL_SCREEN_WIDTH - psp_font_width)) {
       x = x0; y++;
     }
@@ -375,10 +484,17 @@ void
 psp_sdl_blit_thumb(int dst_x, int dst_y, SDL_Surface* thumb_surface)
 {
   SDL_Rect dstRect;
+#ifdef MIYOOMINI
+  dstRect.x = dst_x*SCALE_X;
+  dstRect.y = dst_y*SCALE_Y;
+  dstRect.w = thumb_surface->w;
+  dstRect.h = thumb_surface->h;
+#else
   dstRect.x = dst_x;
   dstRect.y = dst_y;
   dstRect.w = thumb_surface->w;
   dstRect.h = thumb_surface->h;
+#endif
   SDL_BlitSurface(thumb_surface, NULL, back_surface, &dstRect);
 }
 
@@ -468,17 +584,29 @@ psp_sdl_save_png(SDL_Surface* my_surface, char* filename)
   int w = my_surface->w;
   int h = my_surface->h;
   u8* pix = (u8*)my_surface->pixels;
+#ifdef MIYOOMINI
+  u8 writeBuffer[PSP_SDL_SCREEN_WIDTH * 3];
+#else
   u8 writeBuffer[512 * 3];
+#endif
 
   FILE *fp = fopen(filename,"wb");
 
   if(!fp) return 0;
-
+ 
+#ifdef MIYOOMINI
+  png_structp png_ptr = png_create_write_struct("1.2.56",
+                                                NULL,
+                                                NULL,
+                                                NULL);
+#else
   png_structp png_ptr = png_create_write_struct(PNG_LIBPNG_VER_STRING,
                                                 NULL,
                                                 NULL,
                                                 NULL);
+#endif
   if(!png_ptr) {
+	fprintf(stderr, "[trngaje] psp_sdl_save_png : png_create_write_struct is failed\n");  
     fclose(fp);
     return 0;
   }
@@ -558,10 +686,17 @@ psp_sdl_load_png(SDL_Surface* my_surface, char* filename)
     return 0;
   }
 
+#ifdef MIYOOMINI
+  png_structp png_ptr = png_create_read_struct("1.2.56",
+                                               NULL,
+                                               NULL,
+                                               NULL);
+#else
   png_structp png_ptr = png_create_read_struct(PNG_LIBPNG_VER_STRING,
                                                NULL,
                                                NULL,
                                                NULL);
+#endif
   if(!png_ptr) {
     fclose(fp);
     return 0;

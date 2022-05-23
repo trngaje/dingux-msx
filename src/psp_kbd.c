@@ -86,17 +86,17 @@ or implied, of Ludovic Jacomme.
    "RIGHT",
    "DOWN",
    "LEFT",
-# if defined(DINGUX_MODE) 
+#if defined(DINGUX_MODE) || defined(MIYOOMINI)
    "X",      // Triangle
    "A",      // Circle
    "B",      // Cross
    "Y",      // Square
-# else
+#else
    "Y",      // Triangle
    "B",      // Circle
    "X",      // Cross
    "A",      // Square
-# endif
+#endif
    "SELECT",
    "START",
    "LTRIGGER",
@@ -114,17 +114,17 @@ or implied, of Ludovic Jacomme.
    "L_RIGHT",
    "L_DOWN",
    "L_LEFT",
-# if defined(DINGUX_MODE) 
+#if defined(DINGUX_MODE) || defined(MIYOOMINI)
    "L_X",      // Triangle
    "L_A",      // Circle
    "L_B",      // Cross
    "L_Y",      // Square
-# else
+#else  
    "L_Y",      // Triangle
    "L_B",      // Circle
    "L_X",      // Cross
    "L_A",      // Square
-# endif
+#endif
    "L_SELECT",
    "L_START",
    "L_LTRIGGER",
@@ -142,17 +142,17 @@ or implied, of Ludovic Jacomme.
    "R_RIGHT",
    "R_DOWN",
    "R_LEFT",
-# if defined(DINGUX_MODE)
+#if defined(DINGUX_MODE) || defined(MIYOOMINI)
    "R_X",      // Triangle
    "R_A",      // Circle
    "R_B",      // Cross
    "R_Y",      // Square
-# else
+#else
    "R_Y",      // Triangle
    "R_B",      // Circle
    "R_X",      // Cross
    "R_A",      // Square
-# endif
+#endif
    "R_SELECT",
    "R_START",
    "R_LTRIGGER",

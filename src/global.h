@@ -36,8 +36,14 @@ MSX_LAST_RENDER
 # define MSX_HEIGHT   228
 # define SCR_WIDTH    MSX_WIDTH
 # define SCR_HEIGHT   MSX_HEIGHT
-# define SNAP_WIDTH   (MSX_WIDTH/2)
-# define SNAP_HEIGHT  (MSX_HEIGHT/2)
+
+#ifdef MIYOOMINI
+	#define SNAP_WIDTH   (MSX_WIDTH)
+	#define SNAP_HEIGHT  (MSX_HEIGHT)
+#else
+	#define SNAP_WIDTH   (MSX_WIDTH/2)
+	#define SNAP_HEIGHT  (MSX_HEIGHT/2)
+#endif
 
 #include <SDL.h>
 

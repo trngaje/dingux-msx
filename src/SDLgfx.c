@@ -275,7 +275,19 @@ PutImage_normal(void)
   int y;
   uint *ptr_dst = back_surface->pixels;
   uint *ptr_src = XBuf;
- 
+
+#ifdef MIYOOMINI 
+  ptr_dst += 12*SCALE_X + (160 * 6)*SCALE_Y;
+
+  for (y = 0; y < SCR_HEIGHT*SCALE_Y; y++) {
+    for (x = 0; x < SCR_WIDTH*SCALE_X; x++) {
+      ptr_dst[x] = ptr_src[x/SCALE_X];
+    }
+    if (y%SCALE_Y == (SCALE_Y-1))
+    	ptr_src += SCR_WIDTH;
+    ptr_dst += PSP_SDL_SCREEN_WIDTH;
+  }
+#else
   ptr_dst += 12 + (160 * 6);
 
   for (y = 0; y < SCR_HEIGHT; y++) {
@@ -285,6 +297,7 @@ PutImage_normal(void)
     ptr_src += SCR_WIDTH/2;
     ptr_dst += 320/2;
   }
+#endif
 }
 
 static inline void 
@@ -293,6 +306,20 @@ PutImage_fit_width(void)
   int x_d, x_s;
   int y_s;
   int y;
+#ifdef MIYOOMINI
+  short *ptr_dst = back_surface->pixels + (PSP_SDL_SCREEN_HEIGHT - MSX_HEIGHT*SCALE_Y) * PSP_SDL_SCREEN_WIDTH;
+  short *ptr_src = XBuf;
+
+  for (y = 0; y < SCR_HEIGHT*SCALE_Y; y++) {
+    for (x_d = 0; x_d < PSP_SDL_SCREEN_WIDTH; x_d++) {
+      x_s = 16 + ((((x_d/SCALE_X) << 1) + x_d/SCALE_X) >> 2);
+      ptr_dst[x_d] = ptr_src[x_s];
+    }
+    if (y%SCALE_Y == (SCALE_Y-1))
+    	ptr_src += SCR_WIDTH;
+    ptr_dst += PSP_SDL_SCREEN_WIDTH;
+  }
+#else
   short *ptr_dst = back_surface->pixels + (PSP_SDL_SCREEN_HEIGHT - MSX_HEIGHT) * 320;
   short *ptr_src = XBuf;
 
@@ -304,6 +331,7 @@ PutImage_fit_width(void)
     ptr_src += SCR_WIDTH;
     ptr_dst += 320;
   }
+#endif
 }
 
 
@@ -321,6 +349,73 @@ PutImage_zoomed(void)
   short *ptr_dst = back_surface->pixels;
   short *ptr_src = XBuf;
 
+#ifdef MIYOOMINI
+  for (y = 0; y < SCR_HEIGHT*SCALE_Y; y++) {
+
+    if ((y/SCALE_Y+1)%19)
+    {
+      p=ptr_dst;
+      for (x = 0; x < SCR_WIDTH*SCALE_X; x+=6) { // Normal line
+        *p++=ptr_src[x/SCALE_X+0];
+        *p++=ptr_src[x/SCALE_X+1];
+        wa  =ptr_src[x/SCALE_X+2];
+        wb  =ptr_src[x/SCALE_X+3];
+        *p++=wa;
+        *p++=COLAVG(wa, wb);
+        *p++=wb;
+        *p++=ptr_src[x/SCALE_X+4];
+        *p++=ptr_src[x/SCALE_X+5];
+      }
+    }
+    else
+    {
+      prev=ptr_dst-PSP_SDL_SCREEN_WIDTH;
+      next=ptr_dst+PSP_SDL_SCREEN_WIDTH;
+      p=ptr_dst;
+      for (x = 0; x < SCR_WIDTH*SCALE_X; x+=6) { // Interpolated line
+        wa=ptr_src[x/SCALE_X+0];
+        *next++=wa;
+        w=*prev++;
+        *p++=COLAVG(w, wa);
+
+        wa=ptr_src[x/SCALE_X+1];
+        *next++=wa;
+        w=*prev++;
+        *p++=COLAVG(w, wa);
+
+        wa=ptr_src[x/SCALE_X+2];
+        wb=ptr_src[x/SCALE_X+3];
+        wc=COLAVG(wa, wb);
+
+        *next++=wa;
+        w=*prev++;
+        *p++=COLAVG(w, wa);
+
+        *next++=wc;
+        w=*prev++;
+        *p++=COLAVG(w, wc);
+
+        *next++=wb;
+        w=*prev++;
+        *p++=COLAVG(w, wb);
+
+        wa=ptr_src[x/SCALE_X+4];
+        *next++=wa;
+        w=*prev++;
+        *p++=COLAVG(w, wa);
+
+        wa=ptr_src[x/SCALE_X+5];
+        *next++=wa;
+        w=*prev++;
+        *p++=COLAVG(w, wa);
+      }
+      ptr_dst += PSP_SDL_SCREEN_WIDTH;
+    }
+    if (y%SCALE_Y == (SCALE_Y-1))
+    	ptr_src += SCR_WIDTH;
+    ptr_dst += PSP_SDL_SCREEN_WIDTH;
+  }
+#else
   for (y = 0; y < SCR_HEIGHT; y++) {
 
     if ((y+1)%19)
@@ -385,6 +480,7 @@ PutImage_zoomed(void)
     ptr_src += SCR_WIDTH;
     ptr_dst += 320;
   }
+#endif
 }
 
 
@@ -405,6 +501,60 @@ PutImage_fullscreen(void)
     ptr_src += 8 + (18 * SCR_WIDTH);
   }
 
+#ifdef MIYOOMINI
+  for (y = 0; y < max_y*SCALE_Y; y++) {
+
+    if ((y/SCALE_Y+1)%mod_y)
+    {
+      for (x = 0; x < 256*SCALE_X; x+=4) { // Normal line
+        *ptr_dst++=ptr_src[x/SCALE_X+0];
+        wa        =ptr_src[x/SCALE_X+1];
+        wb        =ptr_src[x/SCALE_X+2];
+        *ptr_dst++=wa;
+        *ptr_dst++=COLAVG(wa, wb);
+        *ptr_dst++=wb;
+        *ptr_dst++=ptr_src[x/SCALE_X+3];
+      }
+    }
+    else
+    {
+      prev=ptr_dst-PSP_SDL_SCREEN_WIDTH;
+      next=ptr_dst+PSP_SDL_SCREEN_WIDTH;
+      for (x = 0; x < 256*SCALE_X; x+=4) { // Interpolated line
+
+        wa=ptr_src[x/SCALE_X+0];
+        *next++=wa;
+        w=*prev++;
+        *ptr_dst++=COLAVG(w, wa);
+
+        wa=ptr_src[x/SCALE_X+1];
+        wb=ptr_src[x/SCALE_X+2];
+        wc=COLAVG(wa, wb);
+
+        *next++=wa;
+        w=*prev++;
+        *ptr_dst++=COLAVG(w, wa);
+
+        *next++=wc;
+        w=*prev++;
+        *ptr_dst++=COLAVG(w, wc);
+
+        *next++=wb;
+        w=*prev++;
+        *ptr_dst++=COLAVG(w, wb);
+
+        wa=ptr_src[x/SCALE_X+3];
+        *next++=wa;
+        w=*prev++;
+        *ptr_dst++=COLAVG(w, wa);
+      }
+      ptr_dst=next;
+    }
+    
+    if (y%SCALE_Y == (SCALE_Y-1))
+    	ptr_src+=SCR_WIDTH;
+  }
+#else
   for (y = 0; y < max_y; y++) {
 
     if ((y+1)%mod_y)
@@ -455,6 +605,7 @@ PutImage_fullscreen(void)
     }
     ptr_src+=SCR_WIDTH;
   }
+#endif
 }
 
 

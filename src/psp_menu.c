@@ -66,7 +66,7 @@ enum {
   MENU_DEL_SLOT,
 
   MENU_SCREENSHOT,
-  // MENU_HELP,
+  MENU_HELP,
 
   MENU_LOAD_ROM,
   MENU_LOAD_DISK0,
@@ -89,6 +89,32 @@ enum {
 
   static menu_item_t menu_list[] =
   {
+#if KORFONT
+    // { "Volume          :" },
+
+    { "데이타 불러오기" },
+    { "데이타 저장" },
+    { "데이타 삭제" },
+
+    { "스크린샷 저장" },
+    { "도움말" },
+
+    { "롬 불러오기" },
+    { "디스크0 불러오기" },
+    { "디스크1 불러오기" },
+    { "롬 꺼내기" },
+
+    // { "Comments" },
+    { "치트" },
+    // { "Keyboard" },
+    // { "Joystick" },
+    { "설정" },
+
+    { "리셋" },
+    // { "Back to MSX" },
+
+    { "종료" }
+#else	  
     // { "Volume          :" },
 
     { "Load state" },
@@ -96,7 +122,7 @@ enum {
     { "Delete state" },
 
     { "Save Screenshot" },
-    // { "Help" },
+    { "Help" },
 
     { "Load Rom" },
     { "Load Disk 0" },
@@ -113,6 +139,7 @@ enum {
     // { "Back to MSX" },
 
     { "Exit" }
+#endif
   };
 
   static int cur_menu_id = 0;
@@ -135,10 +162,37 @@ string_fill_with_space(char *buffer, int size)
   int length = strlen(buffer);
   int index;
 
+#ifdef KORFONT 
+  unsigned short usCode;
+  int cnt=0;
+  for (index = 0; buffer[index] != '\0'; index++) { 
+	usCode = utf8_to_unicode(buffer[index+0], buffer[index+1], buffer[index+2]);
+			
+	if (usCode >= 0xac00 && usCode <= 0xd7a3) { // unicode hangul code range 
+	  if (cnt <= (size-2)) {
+		  cnt+=2;
+		  index+=2;
+	  }
+	  else {
+		  buffer[index] = 0; // out of range
+		  return;
+	  }
+	}
+	else {
+	  cnt++;
+	}
+  }  
+    
+  for (; cnt < size; cnt++, index++) {
+    buffer[index] = ' ';
+  }
+  buffer[index] = 0;
+#else
   for (index = length; index < size; index++) {
     buffer[index] = ' ';
   }
   buffer[size] = 0;
+#endif
 }
 
 void
@@ -150,7 +204,11 @@ psp_display_screen_menu(void)
   int color   = 0;
   int x       = 10;
   int y       = 20;
+#ifdef KORFONT
+  int y_step  = 10+2;
+#else
   int y_step  = 10;
+#endif
   int x_step  = 30; /* dc 20130702 */
 
   psp_sdl_blit_background();
@@ -169,12 +227,20 @@ psp_display_screen_menu(void)
             sprintf(buffer,": %d", MSX.psp_screenshot_id);
             string_fill_with_space(buffer, 4);
             psp_sdl_back2_print(140, y, buffer, color);
+#ifdef MIYOOMINI			
+        case MENU_EJECT_ROM:
+        case MENU_SETTINGS:
+        case MENU_RESET:
+          y += y_step;
+          break;		
+#else
         case MENU_DEL_SLOT:
         case MENU_EJECT_ROM:
         case MENU_SETTINGS:
         case MENU_RESET:
           y += y_step;
           break;
+#endif
     }
   }
 
@@ -615,9 +681,9 @@ psp_main_menu(void)
 			case MENU_EXIT      : psp_main_menu_exit();
 			break;
 
-			// case MENU_HELP      : psp_help_menu();
-			// 					  old_pad = new_pad = 0;
-			// break;
+			case MENU_HELP      : psp_help_menu();
+			 					  old_pad = new_pad = 0;
+			 break;
 		  }
 
 		} else

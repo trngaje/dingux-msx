@@ -2628,12 +2628,21 @@ msx_default_settings()
   MSX.msx_use_8950        = 0;
   MSX.msx_uperiod         = 100;
   MSX.msx_use_2413        = 0;
+#ifdef MIYOOMINI
+  MSX.msx_render_mode     = MSX_RENDER_FULL;
+#else
   MSX.msx_render_mode     = MSX_RENDER_FAST;
+#endif
   MSX.psp_reverse_analog  = 0;
 # if !defined(CAANOO_MODE)
   MSX.psp_cpu_clock       = GP2X_DEF_EMU_CLOCK;
 # endif
+
+#ifdef MIYOOMINI
+  MSX.psp_sound_volume    = 1;
+#else
   MSX.psp_sound_volume    = 3;
+#endif
   MSX.msx_speed_limiter   = 60;
   MSX.msx_view_fps        = 0;
   MSX.psp_screenshot_id   = 0;

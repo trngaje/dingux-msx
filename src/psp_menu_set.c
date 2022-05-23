@@ -81,6 +81,27 @@ enum {
 
   static menu_item_t menu_list[] =
   {
+#ifdef KORFONT
+    { "화면 크기        :"}, // 9글자 기준
+    { "프레임 스킵      :"},
+    { "FPS 표시         :"},
+    { "속도 제한        :"},
+    { "비디오 모드      :"},
+    { "소리 활성화      :"},
+    { "소리 크기        :"},
+    { "음원 FM-PAC      :"},
+    { "음원 모듈        :"},
+    { "MSX 버젼         :"},
+    { "MSX 램 크기      :"},
+    // { "Clock frequency    :"},
+    { "키보드" },
+    { "조이스틱" },
+
+    { "설정 불러오기"       },
+    { "설정 저장"       },
+    { "설정 초기화"      },
+    // { "Back to Menu"        }
+#else
     { "Render mode        :"},
     { "Frameskip          :"},
     { "Show FPS           :"},
@@ -100,6 +121,7 @@ enum {
     { "Save settings"       },
     { "Reset settings"      },
     // { "Back to Menu"        }
+#endif
   };
 
   static int cur_menu_id = 0;
@@ -111,7 +133,11 @@ enum {
   static int msx_render_mode      = MSX_RENDER_ZOOM;
   static int msx_speed_limiter    = 60;
   static int psp_cpu_clock        = GP2X_DEF_EMU_CLOCK;
+#ifdef MIYOOMINI
+  static int psp_sound_volume     = 2;
+#else
   static int psp_sound_volume     = 3;
+#endif
   static int msx_version          = 0;
   static int msx_ram_pages        = 16;
   static int msx_ntsc             = 1;
@@ -125,8 +151,11 @@ psp_display_screen_settings_menu(void)
   int color   = 0;
   int x       = 10;
   int y       = 20;
+#ifdef KORFONT
+  int y_step  = 12;
+#else
   int y_step  = 10;
-
+#endif
   psp_sdl_blit_help();
  
   for (menu_id = 0; menu_id < MAX_MENU_SET_ITEM; menu_id++, y += y_step) {
@@ -211,10 +240,11 @@ psp_display_screen_settings_menu(void)
     //   psp_sdl_back2_print(140, y, buffer, color);
     //   y += y_step;
     // } else
+#ifndef KORFONT
     if (menu_id == MENU_SET_VIDEO || menu_id == MENU_SET_USE_8950 || menu_id == MENU_SET_MSX_RAM_PAGES || menu_id == MENU_SET_RESET || menu_id == MENU_JOYSTICK) {
       y += y_step;
     }
-
+#endif
   }
 
   psp_menu_display_save_name();

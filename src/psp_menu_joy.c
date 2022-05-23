@@ -106,8 +106,11 @@ psp_display_screen_joystick_menu(void)
   int color   = 0;
   int x       = 10;
   int y       = 20;
+#ifdef KORFONT
+  int y_step  = 12;
+#else
   int y_step  = 10;
-
+#endif
   psp_sdl_blit_help();
   
   for (menu_id = 0; menu_id < MAX_MENU_JOY_ITEM; menu_id++) {

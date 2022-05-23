@@ -22,17 +22,20 @@
 # define PSP_SDL_NOP   0
 # define PSP_SDL_XOR   1
 
-#if 0 //def MIYOOMINI
+#ifdef MIYOOMINI
 #define PSP_LINE_SIZE  640
 
 #define PSP_SDL_SCREEN_WIDTH    640
 #define PSP_SDL_SCREEN_HEIGHT   480
-
+#define SCALE_X 2
+#define SCALE_Y 2
 #else
 #define PSP_LINE_SIZE  320
 
 #define PSP_SDL_SCREEN_WIDTH    320
 #define PSP_SDL_SCREEN_HEIGHT   240
+#define SCALE_X 1
+#define SCALE_Y 1
 #endif
 
   typedef unsigned char   uchar;
@@ -56,6 +59,11 @@
   extern void psp_sdl_fill_rectangle(int x, int y, int w, int h, int color, int mode);
   extern void psp_sdl_draw_rectangle(int x, int y, int w, int h, int border, int mode);
   extern void psp_sdl_put_char(int x, int y, int color, int bgcolor, uchar c, int drawfg, int drawbg);
+  #ifdef KORFONT
+  unsigned short utf8_to_unicode(unsigned char c1, unsigned char c2, unsigned char c3);
+  extern void psp_sdl_put_kor_char(int x, int y, int color, int bgcolor, unsigned short symbol, int drawfg, int drawbg);
+  extern void psp_sdl_back2_put_kor_char(int x, int y, int color, unsigned short symbol);
+  #endif
   extern void psp_sdl_fill_print(int x,int y,const char *str, int color, int bgcolor);
   extern void psp_sdl_flip(void);
   extern void psp_sdl_back2_print(int x,int y,const char *str, int color);
